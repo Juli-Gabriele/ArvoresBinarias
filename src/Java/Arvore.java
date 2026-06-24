@@ -10,14 +10,14 @@ public class Arvore{
         this.root = root;
     }
     //Adicionar a esquerda
-    public void addLeft(Node abobora,int element){
-        Node sla = new Node(element);
-        abobora.setLeft(sla);
+    public void addLeft(Node parent,int element){
+        Node newNode = new Node(element);
+        parent.setLeft(newNode);
     }
     //Adicionar a direita
-    public void addRigth(Node abobora,int element){
-        Node sla = new Node(element);
-        abobora.setRigth(sla);
+    public void addRigth(Node parent,int element){
+        Node newNode = new Node(element);
+        parent.setRigth(newNode);
     }
 
     public void add(int element){
@@ -45,12 +45,12 @@ public class Arvore{
     }
 
     //Remover a Direita
-    public void removeRigth(Node abobora){
-        abobora.setRigth(null);
+    public void removeRigth(Node parent){
+        parent.setRigth(null);
     }
     //Remover a Esquerda
-    public void removeLeft(Node abobora){
-        abobora.setLeft(null);
+    public void removeLeft(Node parent){
+        parent.setLeft(null);
     }
 
     public void remove(int element){
@@ -137,22 +137,22 @@ public class Arvore{
     }
 
     //Retorno de elemento
-    public int returnElement(Node abobora){
-        return abobora.getElement();
+    public int returnElement(Node parent){
+        return parent.getElement();
     }
 
     //Verifica se os dois braços são nulos
-    public boolean verificarDescendentes(Node abobora){
-        return abobora.getRigth() == null && abobora.getLeft() == null;
+    public boolean verificarDescendentes(Node parent){
+        return parent.getRigth() == null && parent.getLeft() == null;
     }
 
     //Verificar Apenas Direito
-    public boolean VerificarDireito(Node abobora){
-        return abobora.getRigth() == null;
+    public boolean VerificarDireito(Node parent){
+        return parent.getRigth() == null;
     }
 
     //Verificar Apenas Esquerdo
-    public  boolean VerificarEsquerdo(Node abobora){
-        return abobora.getLeft() == null;
+    public  boolean VerificarEsquerdo(Node parent){
+        return parent.getLeft() == null;
     }
 }
