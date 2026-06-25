@@ -107,7 +107,7 @@ public class Arvore {
             if (temp.getElement() < element) {
                 if (!VerificarDireito(temp)) {
                     if (temp.getRigth().getElement() == element) {
-                        return temp;
+                        return temp.getRigth();
                     } else {
                         temp = temp.getRigth();
                     }
@@ -119,6 +119,37 @@ public class Arvore {
                 if (!VerificarEsquerdo(temp)) {
                     if (temp.getLeft().getElement() == element) {
                         return temp.getLeft();
+                    } else {
+                        temp = temp.getLeft();
+                    }
+                } else {
+                    System.out.println("Elemento não encontrado");
+                    return null;
+                }
+            }
+        }
+    }
+    public Node searchNoPai(int element) {
+        if (element == root.getElement()) {
+            return root;
+        }
+        Node temp = root;
+        while (true) {
+            if (temp.getElement() < element) {
+                if (!VerificarDireito(temp)) {
+                    if (temp.getRigth().getElement() == element) {
+                        return temp;
+                    } else {
+                        temp = temp.getRigth();
+                    }
+                } else {
+                    System.out.println("Elemento não encontrado");
+                    return null;
+                }
+            } else {
+                if (!VerificarEsquerdo(temp)) {
+                    if (temp.getLeft().getElement() == element) {
+                        return temp;
                     } else {
                         temp = temp.getLeft();
                     }
