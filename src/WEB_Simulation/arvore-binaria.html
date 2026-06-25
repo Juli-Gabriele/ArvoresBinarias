@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Árvore Binária de Busca — Visualizador</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0f14;
+    --bg-panel: #11161d;
+    --bg-raised: #161d26;
+    --border: #232b35;
+    --text: #e6edf3;
+    --text-dim: #7d8796;
+    --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans: 'Inter', -apple-system, system-ui, sans-serif;
+    --teal: #4fd1c5;
+    --teal-dim: #234540;
+    --amber: #f0b429;
+    --green: #3fb950;
+    --rose: #f85149;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+  }
+
+  .app {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ===== PAINEL LATERAL ===== */
+  .panel {
+    width: 340px;
+    flex-shrink: 0;
+    background: var(--bg-panel);
+    border-right: 1px solid var(--border);
+    padding: 28px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    overflow-y: auto;
+  }
+
+  .panel h1 {
+    font-size: 19px;
+    font-weight: 700;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+
+  .panel .subtitle {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  .controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  #value-input {
+    width: 100%;
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 15px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    outline: none;
+  }
+
+  #value-input:focus {
+    border-color: var(--teal);
+  }
+
+  .btn-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+
+  .btn-row.secondary {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .btn {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 9px 8px;
+    border-radius: 7px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: filter 0.15s, transform 0.1s;
+  }
+
+  .btn:active { transform: scale(0.96); }
+
+  .btn-primary { background: var(--teal); color: #06201d; }
+  .btn-danger { background: var(--rose); color: #2a0a08; }
+  .btn-accent { background: var(--amber); color: #2a1d04; }
+  .btn-ghost {
+    background: transparent;
+    border-color: var(--border);
+    color: var(--text-dim);
+  }
+  .btn:hover { filter: brightness(1.12); }
+  .btn-ghost:hover { color: var(--text); border-color: var(--text-dim); }
+
+  .status {
+    min-height: 18px;
+    font-size: 13px;
+    font-family: var(--mono);
+    color: var(--text-dim);
+    transition: color 0.2s;
+  }
+  .status.ok { color: var(--green); }
+  .status.warn { color: var(--rose); }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+    font-size: 11.5px;
+    color: var(--text-dim);
+  }
+  .legend span { display: flex; align-items: center; gap: 6px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; border: 2px solid; }
+  .dot-default { border-color: var(--teal); background: #16222c; }
+  .dot-path { border-color: var(--amber); background: #2a2210; }
+  .dot-found { border-color: var(--green); background: #123a1f; }
+  .dot-notfound { border-color: var(--rose); background: #3a1414; }
+
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+  .stat {
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 8px;
+    text-align: center;
+  }
+  .stat span {
+    display: block;
+    font-size: 10.5px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+  }
+  .stat strong {
+    font-family: var(--mono);
+    font-size: 18px;
+    color: var(--teal);
+  }
+
+  .traversals h2 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    margin: 0 0 10px;
+    font-weight: 600;
+  }
+  .trav-row {
+    margin-bottom: 10px;
+  }
+  .trav-row span {
+    display: block;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 2px;
+  }
+  .trav-row pre {
+    margin: 0;
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* ===== ÁREA DA ÁRVORE ===== */
+  .canvas-wrap {
+    flex: 1;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background:
+      radial-gradient(circle at 1px 1px, #1a212b 1px, transparent 0) 0 0/24px 24px,
+      var(--bg);
+  }
+
+  .svg-scroll {
+    flex: 1;
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  #tree-svg {
+    display: block;
+    overflow: visible;
+  }
+
+  .edge { stroke: var(--teal-dim); stroke-width: 2; }
+
+  .node circle {
+    fill: #16222c;
+    stroke: var(--teal);
+    stroke-width: 2.5;
+    transition: stroke 0.25s, fill 0.25s;
+  }
+  .node text {
+    fill: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 600;
+    pointer-events: none;
+    user-select: none;
+  }
+  .node.state-path circle { stroke: var(--amber); fill: #2a2210; }
+  .node.state-found circle { stroke: var(--green); fill: #123a1f; }
+  .node.state-notfound circle { stroke: var(--rose); fill: #3a1414; }
+  .node.state-duplicate circle { stroke: var(--amber); fill: #2a2210; }
+
+  #empty-state {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 14px;
+    pointer-events: none;
+  }
+
+  @media (max-width: 800px) {
+    .app { flex-direction: column; }
+    .panel { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="panel">
+    <div>
+      <h1>Árvore Binária de Busca</h1>
+      <p class="subtitle">Insira, remova e busque valores. A árvore se redesenha em tempo real.</p>
+    </div>
+
+    <div class="controls">
+      <input id="value-input" type="number" placeholder="Digite um número" />
+      <div class="btn-row">
+        <button id="btn-insert" class="btn btn-primary">Inserir</button>
+        <button id="btn-remove" class="btn btn-danger">Remover</button>
+        <button id="btn-search" class="btn btn-accent">Buscar</button>
+      </div>
+      <div class="btn-row secondary">
+        <button id="btn-random" class="btn btn-ghost">Aleatório</button>
+        <button id="btn-reset" class="btn btn-ghost">Limpar</button>
+      </div>
+    </div>
+
+    <div id="status" class="status"></div>
+
+    <div class="legend">
+      <span><i class="dot dot-default"></i>padrão</span>
+      <span><i class="dot dot-path"></i>caminho</span>
+      <span><i class="dot dot-found"></i>encontrado</span>
+      <span><i class="dot dot-notfound"></i>não encontrado</span>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><span>Altura</span><strong id="stat-height">0</strong></div>
+      <div class="stat"><span>Nós</span><strong id="stat-count">0</strong></div>
+      <div class="stat"><span>Folhas</span><strong id="stat-leaves">0</strong></div>
+    </div>
+
+    <div class="traversals">
+      <h2>Percursos</h2>
+      <div class="trav-row"><span>Em ordem</span><pre id="out-inorder">—</pre></div>
+      <div class="trav-row"><span>Pré-ordem</span><pre id="out-preorder">—</pre></div>
+      <div class="trav-row"><span>Pós-ordem</span><pre id="out-postorder">—</pre></div>
+      <div class="trav-row"><span>Por nível</span><pre id="out-levels">—</pre></div>
+    </div>
+  </aside>
+
+  <main class="canvas-wrap">
+    <div class="svg-scroll">
+      <svg id="tree-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div id="empty-state">árvore vazia — insira um valor para começar</div>
+    </div>
+  </main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  const SVG_NS = "http://www.w3.org/2000/svg";
+  const NODE_R = 20;
+  const SPACING_X = 56;
+  const SPACING_Y = 78;
+  const MARGIN_X = 40;
+  const MARGIN_TOP = 36;
+
+  // ===================================================================
+  //  ÁRVORE BINÁRIA DE BUSCA (lógica pura, sem DOM)
+  // ===================================================================
+  class Node {
+    constructor(value) {
+      this.value = value;
+      this.left = null;
+      this.right = null;
+    }
+  }
+
+  class BST {
+    constructor() {
+      this.root = null;
+    }
+
+    insert(value) {
+      if (this.root === null) {
+        this.root = new Node(value);
+        return true;
+      }
+      let cur = this.root;
+      while (true) {
+        if (value === cur.value) return false;
+        if (value < cur.value) {
+          if (cur.left === null) { cur.left = new Node(value); return true; }
+          cur = cur.left;
+        } else {
+          if (cur.right === null) { cur.right = new Node(value); return true; }
+          cur = cur.right;
+        }
+      }
+    }
+
+    removeNode(node, value) {
+      if (node === null) return null;
+      if (value < node.value) {
+        node.left = this.removeNode(node.left, value);
+      } else if (value > node.value) {
+        node.right = this.removeNode(node.right, value);
+      } else {
+        if (node.left === null) return node.right;
+        if (node.right === null) return node.left;
+        let successor = node.right;
+        while (successor.left !== null) successor = successor.left;
+        node.value = successor.value;
+        node.right = this.removeNode(node.right, successor.value);
+      }
+      return node;
+    }
+
+    remove(value) {
+      this.root = this.removeNode(this.root, value);
+    }
+
+    searchPath(value) {
+      const path = [];
+      let cur = this.root;
+      while (cur !== null) {
+        path.push(cur.value);
+        if (value === cur.value) return { found: true, path };
+        cur = value < cur.value ? cur.left : cur.right;
+      }
+      return { found: false, path };
+    }
+
+    inOrder(node = this.root, arr = []) {
+      if (node === null) return arr;
+      this.inOrder(node.left, arr);
+      arr.push(node.value);
+      this.inOrder(node.right, arr);
+      return arr;
+    }
+
+    preOrder(node = this.root, arr = []) {
+      if (node === null) return arr;
+      arr.push(node.value);
+      this.preOrder(node.left, arr);
+      this.preOrder(node.right, arr);
+      return arr;
+    }
+
+    postOrder(node = this.root, arr = []) {
+      if (node === null) return arr;
+      this.postOrder(node.left, arr);
+      this.postOrder(node.right, arr);
+      arr.push(node.value);
+      return arr;
+    }
+
+    levelOrderStr() {
+      if (!this.root) return "—";
+      const lines = [];
+      let queue = [this.root];
+      let lvl = 0;
+      while (queue.length) {
+        lines.push("N" + lvl + ": " + queue.map(n => n.value).join(" "));
+        const next = [];
+        queue.forEach(n => {
+          if (n.left) next.push(n.left);
+          if (n.right) next.push(n.right);
+        });
+        queue = next;
+        lvl++;
+      }
+      return lines.join("\n");
+    }
+
+    height(node = this.root) {
+      if (node === null) return 0;
+      return 1 + Math.max(this.height(node.left), this.height(node.right));
+    }
+
+    countNodes(node = this.root) {
+      if (node === null) return 0;
+      return 1 + this.countNodes(node.left) + this.countNodes(node.right);
+    }
+
+    countLeaves(node = this.root) {
+      if (node === null) return 0;
+      if (node.left === null && node.right === null) return 1;
+      return this.countLeaves(node.left) + this.countLeaves(node.right);
+    }
+  }
+
+  const tree = new BST();
+
+  // ===================================================================
+  //  CÁLCULO DE LAYOUT (posições x,y a partir da estrutura da árvore)
+  // ===================================================================
+  function computeLayout(root) {
+    const positions = new Map();
+    let idx = 0;
+    function walk(node, depth) {
+      if (!node) return;
+      walk(node.left, depth + 1);
+      positions.set(node.value, {
+        x: MARGIN_X + idx * SPACING_X,
+        y: MARGIN_TOP + depth * SPACING_Y,
+        depth
+      });
+      idx++;
+      walk(node.right, depth + 1);
+    }
+    walk(root, 0);
+    return positions;
+  }
+
+  function computeEdges(root) {
+    const edges = [];
+    function walk(node) {
+      if (!node) return;
+      if (node.left) { edges.push({ parent: node.value, child: node.left.value }); walk(node.left); }
+      if (node.right) { edges.push({ parent: node.value, child: node.right.value }); walk(node.right); }
+    }
+    walk(root);
+    return edges;
+  }
+
+  // ===================================================================
+  //  ANIMAÇÃO (tweens manuais via requestAnimationFrame)
+  // ===================================================================
+  function easeInOutQuad(t) {
+    return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+  }
+
+  function tweenNodeMove(g, x0, y0, x1, y1, duration) {
+    const start = performance.now();
+    function step(now) {
+      const t = Math.min(1, (now - start) / duration);
+      const e = easeInOutQuad(t);
+      const x = x0 + (x1 - x0) * e;
+      const y = y0 + (y1 - y0) * e;
+      g.setAttribute("transform", `translate(${x},${y}) scale(1)`);
+      if (t < 1) requestAnimationFrame(step);
+      else g.setAttribute("transform", `translate(${x1},${y1}) scale(1)`);
+    }
+    requestAnimationFrame(step);
+  }
+
+  function tweenNodeEnter(g, x, y, duration) {
+    const start = performance.now();
+    function step(now) {
+      const t = Math.min(1, (now - start) / duration);
+      const e = easeInOutQuad(t);
+      const scale = 0.2 + 0.8 * e;
+      g.setAttribute("transform", `translate(${x},${y}) scale(${scale})`);
+      g.style.opacity = e;
+      if (t < 1) requestAnimationFrame(step);
+      else { g.setAttribute("transform", `translate(${x},${y}) scale(1)`); g.style.opacity = 1; }
+    }
+    requestAnimationFrame(step);
+  }
+
+  function tweenNodeExit(g, duration, onDone) {
+    const start = performance.now();
+    const m = /translate\(([-\d.]+),([-\d.]+)\)/.exec(g.getAttribute("transform") || "");
+    const x = m ? m[1] : 0, y = m ? m[2] : 0;
+    function step(now) {
+      const t = Math.min(1, (now - start) / duration);
+      const scale = 1 - 0.8 * t;
+      g.setAttribute("transform", `translate(${x},${y}) scale(${scale})`);
+      g.style.opacity = 1 - t;
+      if (t < 1) requestAnimationFrame(step);
+      else { g.remove(); if (onDone) onDone(); }
+    }
+    requestAnimationFrame(step);
+  }
+
+  function tweenLine(line, from, to, duration) {
+    const start = performance.now();
+    function step(now) {
+      const t = Math.min(1, (now - start) / duration);
+      const e = easeInOutQuad(t);
+      line.setAttribute("x1", from.x1 + (to.x1 - from.x1) * e);
+      line.setAttribute("y1", from.y1 + (to.y1 - from.y1) * e);
+      line.setAttribute("x2", from.x2 + (to.x2 - from.x2) * e);
+      line.setAttribute("y2", from.y2 + (to.y2 - from.y2) * e);
+      if (t < 1) requestAnimationFrame(step);
+      else { line.setAttribute("x1", to.x1); line.setAttribute("y1", to.y1); line.setAttribute("x2", to.x2); line.setAttribute("y2", to.y2); }
+    }
+    requestAnimationFrame(step);
+  }
+
+  function fadeOutRemove(el, duration) {
+    const start = performance.now();
+    function step(now) {
+      const t = Math.min(1, (now - start) / duration);
+      el.style.opacity = 1 - t;
+      if (t < 1) requestAnimationFrame(step);
+      else el.remove();
+    }
+    requestAnimationFrame(step);
+  }
+
+  // ===================================================================
+  //  RENDERIZAÇÃO (diff entre estado atual do DOM e novo layout)
+  // ===================================================================
+  const svg = document.getElementById("tree-svg");
+  const edgesGroup = document.createElementNS(SVG_NS, "g");
+  const nodesGroup = document.createElementNS(SVG_NS, "g");
+  svg.appendChild(edgesGroup);
+  svg.appendChild(nodesGroup);
+
+  const nodeEls = new Map();  // value -> { g, x, y }
+  const edgeEls = new Map();  // "parent-child" -> { line, x1,y1,x2,y2 }
+
+  function fullRender() {
+    const positions = computeLayout(tree.root);
+    const edges = computeEdges(tree.root);
+
+    let maxDepth = 0;
+    positions.forEach(p => { if (p.depth > maxDepth) maxDepth = p.depth; });
+    const width = Math.max(360, MARGIN_X * 2 + positions.size * SPACING_X);
+    const height = MARGIN_TOP * 2 + (maxDepth + 1) * SPACING_Y;
+    svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    svg.setAttribute("width", width);
+    svg.setAttribute("height", height);
+
+    // ---- EDGES ----
+    const newEdgeKeys = new Set(edges.map(e => e.parent + "-" + e.child));
+    edgeEls.forEach((obj, key) => {
+      if (!newEdgeKeys.has(key)) {
+        fadeOutRemove(obj.line, 260);
+        edgeEls.delete(key);
+      }
+    });
+    edges.forEach(e => {
+      const key = e.parent + "-" + e.child;
+      const pPos = positions.get(e.parent);
+      const cPos = positions.get(e.child);
+      let obj = edgeEls.get(key);
+      if (!obj) {
+        const line = document.createElementNS(SVG_NS, "line");
+        line.setAttribute("class", "edge");
+        line.setAttribute("x1", pPos.x); line.setAttribute("y1", pPos.y);
+        line.setAttribute("x2", pPos.x); line.setAttribute("y2", pPos.y);
+        edgesGroup.appendChild(line);
+        obj = { line, x1: pPos.x, y1: pPos.y, x2: pPos.x, y2: pPos.y };
+        edgeEls.set(key, obj);
+        tweenLine(line, { x1: pPos.x, y1: pPos.y, x2: pPos.x, y2: pPos.y }, { x1: pPos.x, y1: pPos.y, x2: cPos.x, y2: cPos.y }, 450);
+        Object.assign(obj, { x1: pPos.x, y1: pPos.y, x2: cPos.x, y2: cPos.y });
+      } else {
+        const to = { x1: pPos.x, y1: pPos.y, x2: cPos.x, y2: cPos.y };
+        const from = { x1: obj.x1, y1: obj.y1, x2: obj.x2, y2: obj.y2 };
+        if (from.x1 !== to.x1 || from.y1 !== to.y1 || from.x2 !== to.x2 || from.y2 !== to.y2) {
+          tweenLine(obj.line, from, to, 450);
+        }
+        Object.assign(obj, to);
+      }
+    });
+
+    // ---- NODES ----
+    const newValues = new Set(positions.keys());
+    nodeEls.forEach((obj, value) => {
+      if (!newValues.has(value)) {
+        tweenNodeExit(obj.g, 260);
+        nodeEls.delete(value);
+      }
+    });
+    positions.forEach((pos, value) => {
+      let obj = nodeEls.get(value);
+      if (!obj) {
+        const g = document.createElementNS(SVG_NS, "g");
+        g.setAttribute("class", "node");
+        g.setAttribute("transform", `translate(${pos.x},${pos.y}) scale(0.2)`);
+        g.style.opacity = 0;
+        const circle = document.createElementNS(SVG_NS, "circle");
+        circle.setAttribute("r", NODE_R);
+        g.appendChild(circle);
+        const text = document.createElementNS(SVG_NS, "text");
+        text.textContent = value;
+        text.setAttribute("text-anchor", "middle");
+        text.setAttribute("dy", "0.32em");
+        g.appendChild(text);
+        nodesGroup.appendChild(g);
+        nodeEls.set(value, { g, x: pos.x, y: pos.y });
+        tweenNodeEnter(g, pos.x, pos.y, 420);
+      } else {
+        if (obj.x !== pos.x || obj.y !== pos.y) {
+          tweenNodeMove(obj.g, obj.x, obj.y, pos.x, pos.y, 450);
+        }
+        obj.x = pos.x; obj.y = pos.y;
+      }
+    });
+
+    document.getElementById("empty-state").style.display = tree.root ? "none" : "flex";
+  }
+
+  // ===================================================================
+  //  PAINEL DE ESTATÍSTICAS E PERCURSOS
+  // ===================================================================
+  function updateStats() {
+    document.getElementById("out-inorder").textContent = tree.root ? tree.inOrder().join(" ") : "—";
+    document.getElementById("out-preorder").textContent = tree.root ? tree.preOrder().join(" ") : "—";
+    document.getElementById("out-postorder").textContent = tree.root ? tree.postOrder().join(" ") : "—";
+    document.getElementById("out-levels").textContent = tree.levelOrderStr();
+    document.getElementById("stat-height").textContent = tree.height();
+    document.getElementById("stat-count").textContent = tree.countNodes();
+    document.getElementById("stat-leaves").textContent = tree.countLeaves();
+  }
+
+  function setStatus(msg, kind) {
+    const el = document.getElementById("status");
+    el.textContent = msg;
+    el.className = "status" + (kind ? " " + kind : "");
+  }
+
+  function clearAllStateClasses() {
+    nodeEls.forEach(obj => obj.g.classList.remove("state-path", "state-found", "state-notfound", "state-duplicate"));
+  }
+
+  // ===================================================================
+  //  AÇÕES DA INTERFACE
+  // ===================================================================
+  const input = document.getElementById("value-input");
+
+  function readInputValue() {
+    const raw = input.value.trim();
+    if (raw === "") { setStatus("Digite um valor numérico.", "warn"); return null; }
+    const n = parseInt(raw, 10);
+    if (Number.isNaN(n)) { setStatus("Valor inválido.", "warn"); return null; }
+    return n;
+  }
+
+  function clearInput() {
+    input.value = "";
+    input.focus();
+  }
+
+  function doInsert() {
+    const v = readInputValue();
+    if (v === null) return;
+    clearAllStateClasses();
+    const ok = tree.insert(v);
+    if (ok) {
+      setStatus(`Elemento ${v} inserido com sucesso.`, "ok");
+      fullRender();
+      updateStats();
+      clearInput();
+    } else {
+      setStatus(`O valor ${v} já existe na árvore.`, "warn");
+      const obj = nodeEls.get(v);
+      if (obj) {
+        obj.g.classList.add("state-duplicate");
+        setTimeout(() => obj.g.classList.remove("state-duplicate"), 900);
+      }
+    }
+  }
+
+  function doRemove() {
+    const v = readInputValue();
+    if (v === null) return;
+    clearAllStateClasses();
+    const { found } = tree.searchPath(v);
+    if (!found) {
+      setStatus(`Elemento ${v} não encontrado para remoção.`, "warn");
+      return;
+    }
+    tree.remove(v);
+    setStatus(`Elemento ${v} removido com sucesso.`, "ok");
+    fullRender();
+    updateStats();
+    clearInput();
+  }
+
+  function doSearch() {
+    const v = readInputValue();
+    if (v === null) return;
+    clearAllStateClasses();
+    const { found, path } = tree.searchPath(v);
+    let i = 0;
+    const stepDelay = 380;
+    function step() {
+      if (i > 0) {
+        const prevObj = nodeEls.get(path[i - 1]);
+        if (prevObj) prevObj.g.classList.remove("state-path");
+      }
+      if (i < path.length) {
+        const obj = nodeEls.get(path[i]);
+        const isLast = i === path.length - 1;
+        if (obj) obj.g.classList.add(isLast ? (found ? "state-found" : "state-notfound") : "state-path");
+        i++;
+        setTimeout(step, stepDelay);
+      } else {
+        setStatus(found ? `Elemento ${v} encontrado!` : `Elemento ${v} não encontrado na árvore.`, found ? "ok" : "warn");
+        setTimeout(clearAllStateClasses, 1400);
+      }
+    }
+    step();
+  }
+
+  function doRandom() {
+    let v, tries = 0;
+    do { v = Math.floor(Math.random() * 99) + 1; tries++; }
+    while (tree.searchPath(v).found && tries < 50);
+    input.value = v;
+    doInsert();
+  }
+
+  function doReset() {
+    tree.root = null;
+    clearAllStateClasses();
+    fullRender();
+    updateStats();
+    setStatus("Árvore reiniciada.", "ok");
+  }
+
+  document.getElementById("btn-insert").addEventListener("click", doInsert);
+  document.getElementById("btn-remove").addEventListener("click", doRemove);
+  document.getElementById("btn-search").addEventListener("click", doSearch);
+  document.getElementById("btn-random").addEventListener("click", doRandom);
+  document.getElementById("btn-reset").addEventListener("click", doReset);
+  input.addEventListener("keydown", (e) => { if (e.key === "Enter") doInsert(); });
+
+  // ===================================================================
+  //  ESTADO INICIAL
+  // ===================================================================
+  [5, 3, 7, 1, 4, 6, 9].forEach(v => tree.insert(v));
+  fullRender();
+  updateStats();
+  setStatus("Árvore de exemplo carregada.", "ok");
+})();
+</script>
+</body>
+</html>
